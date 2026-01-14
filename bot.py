@@ -1,73 +1,26 @@
-import requests
 import time
-import hashlib
+from telegram import Bot, Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-# ===== YOUR INFO =====
-BOT_TOKEN = "8455266168:AAG5MpcL307-KRnCITrXgHGrH04IO6cuizs"
-CHAT_ID = "6754145366"
+TOKEN = "8455266168:AAG5MpcL307-KRnCITrXgHGrH04IO6cuizs"
+CHAT_ID = 6754145366
 
-CHECK_INTERVAL = 15  # seconds (FAST)
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("✅ Bot is alive and responding!")
 
-INTENT_WORDS = [
-    "need help",
-    "looking for help",
-    "need someone",
-    "looking for someone",
-    "hire someone",
-    "pay someone",
-    "anyone available"
-]
+async def notify_startup(app):
+    bot = Bot(token=TOKEN)
+    await bot.send_message(chat_id=CHAT_ID, text="🚀 Sidejob bot has started and is running.")
 
-JOB_WORDS = [
-    "yard",
-    "lawn",
-    "cleaning",
-    "moving",
-    "haul",
-    "junk",
-    "handyman",
-    "repair",
-    "paint",
-    "assembly",
-    "installation",
-    "side job",
-    "cash",
-    "today",
-    "asap"
-]
+def main():
+    app = ApplicationBuilder().token(TOKEN).build()
 
-SEARCH_URL = "https://nextdoor.com/search/posts/?q={}"
-seen = set()
+    app.add_handler(CommandHandler("start", start))
 
-def send(msg):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    requests.post(url, json={"chat_id": CHAT_ID, "text": msg})
+    app.post_init = notify_startup
 
-def check():
-    for intent in INTENT_WORDS:
-        url = SEARCH_URL.format(intent.replace(" ", "+"))
-        r = requests.get(url, timeout=10)
-        if r.status_code != 200:
-            continue
+    print("Bot is starting...")
+    app.run_polling()
 
-        text = r.text.lower()
-        for job in JOB_WORDS:
-            if intent in text and job in text:
-                key = hashlib.md5((intent + job).encode()).hexdigest()
-                if key not in seen:
-                    seen.add(key)
-                    send(
-                        f"🚨 NEW SIDE JOB FOUND\n\n"
-                        f"Intent: {intent}\n"
-                        f"Job: {job}\n\n"
-                        f"🔗 Check Nextdoor now:\n{url}"
-                    )
-
-send("✅ Side-job alert bot is LIVE")
-
-while True:
-    try:
-        check()
-        time.sleep(CHECK_INTERVAL)
-    except:
-        time.sleep(10)
+if __name__ == "__main__":
+    main()
