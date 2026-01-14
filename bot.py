@@ -1,26 +1,28 @@
-import time
-from telegram import Bot, Update
+# bot.py
+from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import os
 
-TOKEN = "8455266168:AAG5MpcL307-KRnCITrXgHGrH04IO6cuizs"
-CHAT_ID = 6754145366
+# Get your bot token from environment variable
+TOKEN = os.getenv("BOT_TOKEN", "8455266168:AAG5MpcL307-KRnCITrXgHGrH04IO6cuizs")  # fallback to your token
 
+# Example command handler
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("✅ Bot is alive and responding!")
+    await update.message.reply_text("Hello! Bot is running.")
 
-async def notify_startup(app):
-    bot = Bot(token=TOKEN)
-    await bot.send_message(chat_id=CHAT_ID, text="🚀 Sidejob bot has started and is running.")
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("This is a help message.")
 
 def main():
     app = ApplicationBuilder().token(TOKEN).build()
 
+    # Add command handlers
     app.add_handler(CommandHandler("start", start))
-
-    app.post_init = notify_startup
+    app.add_handler(CommandHandler("help", help_command))
 
     print("Bot is starting...")
     app.run_polling()
 
 if __name__ == "__main__":
     main()
+    
